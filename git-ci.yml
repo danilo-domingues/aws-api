@@ -3,9 +3,18 @@ stages:
   - deploy
 build_job:
   stage: build
+  image: ahmedghanima/dotnet-lambda
   script:
-    - echo "build"
-deploy_job:
-  stage: deploy
-  script:
-    - echo "deploy"
+    - export PATH="$PATH:/root/.dotnet/tools" # add lambda tools to path
+    - dotnet lambda package
+  artifacts:
+    expire_in: 1 week  
+    paths:
+      - '$CI_PROJECT_DIR/bin/Release/netcoreapp3.1/dotnet-deploy-example.zip'  # saving output package
+deploy_job: 
+  stage: deploy 
+  image: amazon / lambda-build-node10.x 
+  script: 
+    - aws lambda update-function-code - function-name dotNetCore-Example - zip-file fileb: // $ OUTPUT_FILE_PATH 
+  dependências: 
+    - build_job
